@@ -1,0 +1,27 @@
+#!/usr/bin/env ruby
+
+# Calls `rails runner` in a Heroku app. Requires heroku CLI.
+
+require 'optparse'
+
+options = {}
+
+OptionParser.new do |opts|
+  opts.banner = 'Usage: hrr [options] "puts \'foo\'"'
+
+  opts.on('-aAPP_NAME', '--app=APP_NAME', 'Heroku app name to use. Has precedence over --remote') do |a|
+    options[:app] = a
+  end
+
+  opts.on('-rREMOTE_NAME', '--remote=REMOTE_NAME', <<~DESC.chomp) do |r|
+    Git remote to use if inside the project folder. It's an alternative to --app
+  DESC
+    options[:remote] = r
+  end
+end.parse!
+
+cmd = "heroku run \"rails r \\\"#{ARGV[-1]}\\\"\""
+cmd << " --remote #{options[:remote]}" if options[:remote]
+cmd << " --app #{options[:app]}" if options[:app]
+puts cmd
+system cmd
