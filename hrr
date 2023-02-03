@@ -6,30 +6,45 @@ require 'optparse'
 
 options = {}
 
+REMOTE_SHORTCUTS = { h: :heroku, p: :production, s: :staging }.freeze
+
 OptionParser.new do |opts|
   opts.banner = 'Usage: hrr [options] "puts \'foo\'"'
+  opts.banner = <<~BANNER
+    Calls Rails runner in a Heroku app. Requires heroku CLI.
+
+    Usage: hrr [-a app_name] [[-d] -r remote_name] "puts \'foo\'"
+
+    Remote name shortcuts
+    ---------------------
+    Easier way to specify -r values. They can be disabled with the -d option (if you have a remote called 'h', for example)
+    - Use -rh as a shortcut for heroku
+    - Use -rp as a shortcut for production
+    - Use -rs as a shortcut for staging.
+
+    Options
+    -------
+  BANNER
 
   opts.on('-aAPP_NAME', '--app=APP_NAME', 'Heroku app name to use. Has precedence over --remote') do |a|
     options[:app] = a
   end
 
+  opts.on('-d', '--disable-remote-shortcuts', 'Disables -r shortcuts (for remote)') do
+    options[:disable_remote_shortcuts] = true
+  end
+
   opts.on('-rREMOTE_NAME', '--remote=REMOTE_NAME', <<~DESC.chomp) do |r|
-    Git remote to use if inside the project folder. It's an alternative to --app
+    Git remote to use if inside the project folder. It's an alternative to --app. See shortcuts in banner above.
   DESC
     options[:remote] = r
+
+    if !options[:disable_remote_shortcuts] && (found = REMOTE_SHORTCUTS[options[:remote]&.to_sym])
+      options[:remote] = found
+    end
   end
 
-  opts.on('-h', 'Sets --remote=heroku (ignoring any given --remote)') do
-    options[:remote] = 'heroku'
-  end
 
-  opts.on('-p', 'Sets --remote=production (ignoring any given --remote)') do
-    options[:remote] = 'production'
-  end
-
-  opts.on('-st', 'Sets --remote=staging (ignoring any given --remote)') do
-    options[:remote] = 'staging'
-  end
 end.parse!
 
 cmd = "heroku run \"rails r \\\"#{ARGV[-1]}\\\"\""
