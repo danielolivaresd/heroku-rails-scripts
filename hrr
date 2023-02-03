@@ -18,6 +18,18 @@ OptionParser.new do |opts|
   DESC
     options[:remote] = r
   end
+
+  opts.on('-h', 'Sets --remote=heroku (ignoring any given --remote)') do
+    options[:remote] = 'heroku'
+  end
+
+  opts.on('-p', 'Sets --remote=production (ignoring any given --remote)') do
+    options[:remote] = 'production'
+  end
+
+  opts.on('-st', 'Sets --remote=staging (ignoring any given --remote)') do
+    options[:remote] = 'staging'
+  end
 end.parse!
 
 cmd = "heroku run \"rails r \\\"#{ARGV[-1]}\\\"\""
